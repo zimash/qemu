@@ -739,6 +739,10 @@ coverity:
     - job: amd64-fedora-container
       optional: true
   before_script:
+    - 'echo "$COVERITY_TOKEN" | sed "s/[0-9A-F]/*/g"'
+    - 'echo "$COVERITY_EMAIL" | sed "s/^@/*/g"'
+    - 'echo "$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"'
+    - 'echo "$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM"'
     - dnf install -y curl wget
   script:
     # would be nice to cancel the job if over quota (https://gitlab.com/gitlab-org/gitlab/-/issues/256089)
@@ -751,18 +755,18 @@ coverity:
       fi)'
     - 'scripts/coverity-scan/run-coverity-scan --update-tools-only > update-tools.log 2>&1 || cat update-tools.log'
     - 'scripts/coverity-scan/run-coverity-scan --no-update-tools'
-  rules:
-    - if: '$COVERITY_TOKEN == null'
-      when: never
-    - if: '$COVERITY_EMAIL == null'
-      when: never
-    # Never included on upstream pipelines, except for schedules
-    - if: '$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-      when: on_success
-    - if: '$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM'
-      when: never
-    # Forks don't get any pipeline unless QEMU_CI=1 or QEMU_CI=2 is set
-    - if: '$QEMU_CI != "1" && $QEMU_CI != "2"'
-      when: never
-    # Always manual on forks even if $QEMU_CI == "2"
-    - when: manual
+# rules:
+#   - if: '$COVERITY_TOKEN == null'
+#     when: never
+#   - if: '$COVERITY_EMAIL == null'
+#     when: never
+#   # Never included on upstream pipelines, except for schedules
+#   - if: '$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM && $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+#     when: on_success
+#   - if: '$CI_PROJECT_NAMESPACE == $QEMU_CI_UPSTREAM'
+#     when: never
+#   # Forks don't get any pipeline unless QEMU_CI=1 or QEMU_CI=2 is set
+#   - if: '$QEMU_CI != "1" && $QEMU_CI != "2"'
+#     when: never
+#   # Always manual on forks even if $QEMU_CI == "2"
+#   - when: manual
